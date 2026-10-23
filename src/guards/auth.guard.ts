@@ -1,38 +1,40 @@
-import { Injectable, CanActivate, ExecutionContext} from "@nestjs/common";
-import { AuthService } from "src/auth/auth.service";
-import { UserService } from "src/user/user.service";
-
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { AuthService } from '../auth/auth.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-
-    constructor(
-        private readonly authService: AuthService,
-        private readonly userService: UserService,
-    ) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   async canActivate(context: ExecutionContext) {
+    console.log('AUTH GUARD EXECUTADO');
 
-     const request = context.switchToHttp().getRequest()
-     const{authorization} = request.headers
+    const request = context.switchToHttp().getRequest();
+    const { authorization } = request.headers;
 
-        try {
+    try {
+      console.log('AUTHORIZATION:', authorization);
 
-        const data = this.authService.checkToken((authorization ??'').split(' ')[1])
+      const data = this.authService.checkToken(
+        (authorization ?? '').split(' ')[1],
+      );
 
-            request.tokenPayload = data
+      console.log('TOKEN VALIDADO:', data);
 
-            request.user = await this.userService.show(data.id)
+      request.tokenPayload = data;
 
-           return true
+      request.user = await this.userService.show(data.id);
 
-        } catch (e) {
-            
-            return false
+      console.log('USUÁRIO ENCONTRADO:', request.user);
+      console.log('AUTH GUARD AUTORIZOU');
 
-        }
-       
-           
+      return true;
+    } catch (e) {
+      console.error('ERRO NO AUTH GUARD:', e);
+      return false;
     }
-
+  }
 }
